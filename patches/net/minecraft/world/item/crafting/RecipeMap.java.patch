@@ -1,0 +1,46 @@
+--- a/net/minecraft/world/item/crafting/RecipeMap.java
++++ b/net/minecraft/world/item/crafting/RecipeMap.java
+@@ -13,24 +_,41 @@
+ 
+ public class RecipeMap {
+     public static final RecipeMap EMPTY = new RecipeMap(ImmutableMultimap.of(), Map.of());
+-    private final Multimap<RecipeType<?>, RecipeHolder<?>> byType;
++    private Multimap<RecipeType<?>, RecipeHolder<?>> byType;
+     private final Map<ResourceKey<Recipe<?>>, RecipeHolder<?>> byKey;
++    private final Multimap<Integer, com.mojang.datafixers.util.Pair<RecipeType<?>, RecipeHolder<?>>> priorities;
+ 
+     private RecipeMap(Multimap<RecipeType<?>, RecipeHolder<?>> p_379497_, Map<ResourceKey<Recipe<?>>, RecipeHolder<?>> p_380280_) {
++        this(p_379497_, p_380280_, com.google.common.collect.ImmutableSetMultimap.of());
++    }
++
++    private RecipeMap(Multimap<RecipeType<?>, RecipeHolder<?>> p_379497_, Map<ResourceKey<Recipe<?>>, RecipeHolder<?>> p_380280_, Multimap<Integer, com.mojang.datafixers.util.Pair<RecipeType<?>, RecipeHolder<?>>> priorities) {
+         this.byType = p_379497_;
+         this.byKey = p_380280_;
++        this.priorities = priorities;
+     }
+ 
+     public static RecipeMap create(Iterable<RecipeHolder<?>> p_379481_) {
+         Builder<RecipeType<?>, RecipeHolder<?>> builder = ImmutableMultimap.builder();
+         com.google.common.collect.ImmutableMap.Builder<ResourceKey<Recipe<?>>, RecipeHolder<?>> builder1 = ImmutableMap.builder();
++        com.google.common.collect.SetMultimap<Integer, com.mojang.datafixers.util.Pair<RecipeType<?>, RecipeHolder<?>>> priorityBuilder = com.google.common.collect.MultimapBuilder.treeKeys().hashSetValues().build();
++        Map<ResourceKey<Recipe<?>>, Integer> recipePriorities = net.neoforged.neoforge.common.NeoForgeEventHandler.getRecipePriorityManager().getRecipePriorities(); // Neo: get overriding recipe priorities
+ 
+         for (RecipeHolder<?> recipeholder : p_379481_) {
++            int priority = recipePriorities.getOrDefault(recipeholder.id(), 0);
++
+             builder.put(recipeholder.value().getType(), recipeholder);
+             builder1.put(recipeholder.id(), recipeholder);
++            priorityBuilder.put(priority, com.mojang.datafixers.util.Pair.of(recipeholder.value().getType(), recipeholder));
+         }
+ 
+-        return new RecipeMap(builder.build(), builder1.build());
++        return new RecipeMap(builder.build(), builder1.build(), com.google.common.collect.ImmutableSetMultimap.copyOf(priorityBuilder));
++    }
++
++    public void order() {
++        com.google.common.collect.LinkedListMultimap<RecipeType<?>, RecipeHolder<?>> finalBuilder = com.google.common.collect.LinkedListMultimap.create();
++        com.google.common.collect.Lists.reverse(new java.util.ArrayList<>(this.priorities.entries())).forEach((e) -> finalBuilder.put(e.getValue().getFirst(), e.getValue().getSecond()));
++        this.byType = ImmutableMultimap.copyOf(finalBuilder);
+     }
+ 
+     public <I extends RecipeInput, T extends Recipe<I>> Collection<RecipeHolder<T>> byType(RecipeType<T> p_379772_) {

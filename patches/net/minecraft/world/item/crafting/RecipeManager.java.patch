@@ -9,6 +9,14 @@
          );
          List<RecipeHolder<?>> list = new ArrayList<>(sortedmap.size());
          sortedmap.forEach((p_379232_, p_379233_) -> {
+@@ -93,6 +_,7 @@
+             .stream()
+             .map(p_380840_ -> new RecipeManager.IngredientCollector(p_380840_.getKey(), p_380840_.getValue()))
+             .toList();
++        this.recipes.order(); // Neo: order recipes by priority.
+         this.recipes
+             .values()
+             .forEach(
 @@ -260,6 +_,11 @@
          return p_380850_ -> p_380850_.getType() == p_381108_ && p_380850_ instanceof SingleItemRecipe singleitemrecipe
                  ? Optional.of(singleitemrecipe.input())
