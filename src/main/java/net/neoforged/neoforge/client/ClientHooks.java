@@ -53,6 +53,8 @@ import net.minecraft.client.gui.screens.inventory.EffectsInInventory;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.SkullModelBase;
+import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -124,6 +126,7 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SkullBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -695,6 +698,13 @@ public class ClientHooks {
         layerDefinitions.forEach((k, v) -> builder.put(k, v.get()));
     }
 
+    private static final Map<SkullBlock.Type, Function<EntityModelSet, SkullModelBase>> skullModelsByType = new HashMap<>();
+
+    @Nullable
+    public static SkullModelBase getModdedSkullModel(EntityModelSet modelSet, SkullBlock.Type type) {
+        return skullModelsByType.getOrDefault(type, set -> null).apply(modelSet);
+    }
+
     private static final ResourceLocation ICON_SHEET = ResourceLocation.fromNamespaceAndPath(NeoForgeVersion.MOD_ID, "textures/gui/icons.png");
 
     public static void firePlayerLogin(MultiPlayerGameMode pc, LocalPlayer player, Connection networkManager) {
@@ -982,6 +992,7 @@ public class ClientHooks {
         MenuScreens.init();
         ModLoader.postEvent(new RegisterClientReloadListenersEvent(resourceManager));
         ModLoader.postEvent(new EntityRenderersEvent.RegisterLayerDefinitions());
+        ModLoader.postEvent(new EntityRenderersEvent.CreateSkullModels(skullModelsByType));
         ModLoader.postEvent(new EntityRenderersEvent.RegisterRenderers());
         ModLoader.postEvent(new RegisterRenderStateModifiersEvent());
         ClientTooltipComponentManager.init();
