@@ -139,6 +139,7 @@ import net.neoforged.fml.ModLoader;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.asm.enumextension.ExtensionInfo;
 import net.neoforged.neoforge.client.entity.animation.json.AnimationTypeManager;
+import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.AddSectionGeometryEvent;
 import net.neoforged.neoforge.client.event.CalculateDetachedCameraDistanceEvent;
 import net.neoforged.neoforge.client.event.CalculatePlayerTurnEvent;
@@ -157,7 +158,6 @@ import net.neoforged.neoforge.client.event.GatherEffectScreenTooltipsEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.MovementInputUpdateEvent;
-import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMaterialAtlasesEvent;
@@ -990,7 +990,11 @@ public class ClientHooks {
         GameTestHooks.registerGametests();
         registerSpriteSourceTypes();
         MenuScreens.init();
-        ModLoader.postEvent(new RegisterClientReloadListenersEvent(resourceManager));
+
+        var rlEvent = new AddClientReloadListenersEvent(resourceManager);
+        ModLoader.postEvent(rlEvent);
+        resourceManager.updateListenersFrom(rlEvent);
+
         ModLoader.postEvent(new EntityRenderersEvent.RegisterLayerDefinitions());
         ModLoader.postEvent(new EntityRenderersEvent.CreateSkullModels(skullModelsByType));
         ModLoader.postEvent(new EntityRenderersEvent.RegisterRenderers());
